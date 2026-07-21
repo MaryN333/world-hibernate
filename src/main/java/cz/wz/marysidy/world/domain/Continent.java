@@ -1,2 +1,11 @@
-package cz.wz.marysidy.world.domain;public class Continent {
+package cz.wz.marysidy.world.domain;
+
+public enum Continent {
+    ASIA,
+    EUROPE,
+    NORTH_AMERICA,
+    AFRICA,
+    OCEANIA,
+    ANTARCTICA,
+    SOUTH_AMERICA
 }
