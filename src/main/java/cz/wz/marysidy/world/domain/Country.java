@@ -8,7 +8,15 @@ import java.util.Set;
 @Table(schema = "world", name = "country")
 public class Country {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+//    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.TABLE, generator = "country_gen")
+    @TableGenerator(
+            name = "country_gen",
+            table = "hibernate_sequences",
+            pkColumnName = "sequence_name",
+            valueColumnName = "next_val",
+            pkColumnValue = "country_id",
+            allocationSize = 1)
     @Column(name = "id")
     private Integer id;
 
