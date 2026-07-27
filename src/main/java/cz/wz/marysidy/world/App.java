@@ -22,6 +22,16 @@ public class App {
     private final CountryDAO countryDAO;
     private final CityDAO cityDAO;
 
+    // Test raw Hibernate query to verify connection
+    private void testConnection(Session session) {
+        List<Country> countries = session.createQuery("from Country", Country.class)
+                .setMaxResults(5).getResultList();
+        System.out.println("Found countries (first 5):");
+        for (Country country : countries) {
+            System.out.println(" - " + country.getName() + " (" + country.getCode() + ")");
+        }
+    }
+
     private void testCountryDAO() {
         System.out.println("=== Testing CountryDAO ===");
 
@@ -70,14 +80,14 @@ public class App {
     private List<City> fetchCities() {
         List<City> allCities = new ArrayList<>();
 
-            int totalCount = cityDAO.getTotalCount();
-            int step = 500;
+        int totalCount = cityDAO.getTotalCount();
+        int step = 500;
 
-            for (int i = 0; i < totalCount; i += step) {
-                List<City> batch = cityDAO.getItems(i, step);
-                allCities.addAll(batch);
-                System.out.println("Fetched " + batch.size() + " cities (offset " + i + ")");
-            }
+        for (int i = 0; i < totalCount; i += step) {
+            List<City> batch = cityDAO.getItems(i, step);
+            allCities.addAll(batch);
+            System.out.println("Fetched " + batch.size() + " cities (offset " + i + ")");
+        }
         return allCities;
     }
 
@@ -99,13 +109,7 @@ public class App {
             Transaction transaction = session.beginTransaction();
             System.out.println("Connected to DB!!!");
 
-            // Test raw Hibernate query to verify connection
-            List<Country> countries = session.createQuery("from Country", Country.class)
-                    .setMaxResults(5).getResultList();
-            System.out.println("Found countries (first 5):");
-            for (Country country : countries) {
-                System.out.println(" - " + country.getName() + " (" + country.getCode() + ")");
-            }
+            testConnection(session);
 
             testCountryDAO();
 
