@@ -3,6 +3,7 @@ package cz.wz.marysidy.world;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import cz.wz.marysidy.world.dao.CityDAO;
 import cz.wz.marysidy.world.dao.CountryDAO;
+import cz.wz.marysidy.world.domain.City;
 import cz.wz.marysidy.world.domain.Continent;
 import cz.wz.marysidy.world.domain.Country;
 import cz.wz.marysidy.world.util.MySessionFactory;
@@ -12,12 +13,14 @@ import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
 public class App {
     private final SessionFactory sessionFactory;
     private final CountryDAO countryDAO;
+    private final CityDAO cityDAO;
 
     private void testCountryDAO() {
         System.out.println("=== Testing CountryDAO ===");
@@ -64,9 +67,24 @@ public class App {
                 () -> System.out.println("Country with name 'France' not found"));
     }
 
+    private List<City> fetchCities() {
+        List<City> allCities = new ArrayList<>();
+
+            int totalCount = cityDAO.getTotalCount();
+            int step = 500;
+
+            for (int i = 0; i < totalCount; i += step) {
+                List<City> batch = cityDAO.getItems(i, step);
+                allCities.addAll(batch);
+                System.out.println("Fetched " + batch.size() + " cities (offset " + i + ")");
+            }
+        return allCities;
+    }
+
     public App() {
         this.sessionFactory = MySessionFactory.getSessionFactory();
         this.countryDAO = new CountryDAO(sessionFactory);
+        this.cityDAO = new CityDAO(sessionFactory);
     }
 
     public static void main(String[] args) {
@@ -74,7 +92,6 @@ public class App {
 //        CountryDAO countryDAO = new CountryDAO(sessionFactory);
         App app = new App();
         app.run();
-
     }
 
     public void run() {
@@ -91,6 +108,10 @@ public class App {
             }
 
             testCountryDAO();
+
+            System.out.println("Loading all cities from DB...");
+            List<City> cities = fetchCities();
+            System.out.println("Total cities loaded: " + cities.size());
 
             transaction.commit();
         } catch (Exception e) {
