@@ -78,6 +78,9 @@ public class App {
     }
 
     private List<City> fetchCities() {
+        List<Country> allCountries = countryDAO.getAllWithDetails();
+        System.out.println("Loaded " + allCountries.size() + " countries with details");
+
         List<City> allCities = new ArrayList<>();
 
         int totalCount = cityDAO.getTotalCount();
@@ -109,9 +112,9 @@ public class App {
             Transaction transaction = session.beginTransaction();
             System.out.println("Connected to DB!!!");
 
-            testConnection(session);
+//            testConnection(session);
 
-            testCountryDAO();
+//            testCountryDAO();
 
             System.out.println("Loading all cities from DB...");
             List<City> cities = fetchCities();
@@ -124,6 +127,5 @@ public class App {
         } finally {
             MySessionFactory.shutdown();
         }
-
     }
 }
