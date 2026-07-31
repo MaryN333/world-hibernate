@@ -45,51 +45,6 @@ public class App {
         }
     }
 
-    private void testCountryDAO() {
-        System.out.println("=== Testing CountryDAO ===");
-
-        // 1. getAll()
-        List<Country> countries1 = countryDAO.getAll();
-        System.out.println("Found countries (first 5):");
-        countries1.stream().limit(5).forEach(c ->
-                System.out.println(" - " + c.getName() + " (" + c.getCode() + ")"));
-
-        // 2. getById()
-        Optional<Country> countryOpt = countryDAO.getById(1);
-        countryOpt.ifPresentOrElse(
-                c -> System.out.println("Country with ID 1: " + c.getName()),
-                () -> System.out.println("Country with ID 1 not found"));
-
-        // 3. save()
-        Country newCountry = new Country();
-        newCountry.setName("Testland");
-        newCountry.setCode("TST");
-        newCountry.setAlternativeCode("TS");
-        newCountry.setContinent(Continent.EUROPE);
-        newCountry.setRegion("Test Region");
-        newCountry.setSurfaceArea(BigDecimal.valueOf(1000));
-        newCountry.setPopulation(100000);
-        newCountry.setLocalName("Testland");
-        newCountry.setGovernmentForm("Test Government");
-        countryDAO.save(newCountry);
-        System.out.println("Saved new country: " + newCountry.getName() + " (ID: " + newCountry.getId() + ")");
-
-        // 4. update()
-        newCountry.setName("Testland Updated");
-        countryDAO.update(newCountry);
-        System.out.println("Updated country name: " + newCountry.getName());
-
-        // 5. deleteById()
-        boolean deleted = countryDAO.deleteById(newCountry.getId());
-        System.out.println(deleted ? "Deleted country by ID: " + newCountry.getId() : "Failed to delete");
-
-        // 6. getByName()
-        Optional<Country> countryByName = countryDAO.getByName("France");
-        countryByName.ifPresentOrElse(
-                c -> System.out.println("Country with name 'France': " + c.getCode()),
-                () -> System.out.println("Country with name 'France' not found"));
-    }
-
     private List<City> fetchCities() {
         List<Country> allCountries = countryDAO.getAllWithDetails();
         System.out.println("Loaded " + allCountries.size() + " countries with details");
@@ -211,8 +166,6 @@ public class App {
     }
 
     public static void main(String[] args) {
-//        SessionFactory sessionFactory = MySessionFactory.getSessionFactory();
-//        CountryDAO countryDAO = new CountryDAO(sessionFactory);
         App app = new App();
         app.run();
     }
@@ -222,8 +175,6 @@ public class App {
             Transaction transaction = session.beginTransaction();
 
 //            testConnection(session);
-
-//            testCountryDAO();
 
             System.out.println("\nLoading all cities from DB...");
             List<City> cities = fetchCities();
