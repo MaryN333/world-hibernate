@@ -33,18 +33,6 @@ public class App {
     private final RedisClient redisClient;
     private final ObjectMapper mapper;
 
-
-    // Test raw Hibernate query to verify connection
-    private void testConnection(Session session) {
-        System.out.println("Connected to DB!!!");
-        List<Country> countries = session.createQuery("from Country", Country.class)
-                .setMaxResults(5).getResultList();
-        System.out.println("Found countries (first 5):");
-        for (Country country : countries) {
-            System.out.println(" - " + country.getName() + " (" + country.getCode() + ")");
-        }
-    }
-
     private List<City> fetchCities() {
         List<Country> allCountries = countryDAO.getAllWithDetails();
         System.out.println("Loaded " + allCountries.size() + " countries with details");
@@ -121,60 +109,9 @@ public class App {
         }
     }
 
-    private void testRedisData(List<Integer> ids) {
-        try (StatefulRedisConnection<String, String> connection = redisClient.connect()) {
-            RedisStringCommands<String, String> sync = connection.sync();
-            for (Integer id : ids) {
-                String key = "city:" + id;
-                String value = sync.get(key);
-
-                if (value == null) {
-                    System.out.println("No data found for key: city:" + id);
-                    continue;
-                }
-                try {
-                    mapper.readValue(value, CityCountry.class);
-                } catch (JsonProcessingException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-    }
-
-    private void testMysqlData(List<Integer> ids) {
-        try (Session session = sessionFactory.getCurrentSession()) {
-            session.beginTransaction();
-            for (Integer id : ids) {
-                Optional<City> optionalCity = cityDAO.getById(id);
-                // Force Hibernate to fully load the City to avoid proxy objects
-                optionalCity.ifPresent(city -> {
-                    if (city.getCountry() != null) {
-                        Set<CountryLanguage> languages = city.getCountry().getLanguages();
-                    }
-                });
-            }
-            session.getTransaction().commit();
-        }
-    }
-
-    public App() {
-        this.sessionFactory = MySessionFactory.getSessionFactory();
-        this.countryDAO = new CountryDAO(sessionFactory);
-        this.cityDAO = new CityDAO(sessionFactory);
-        this.redisClient = prepareRedisClient();
-        this.mapper = new ObjectMapper();
-    }
-
-    public static void main(String[] args) {
-        App app = new App();
-        app.run();
-    }
-
     public void run() {
         try (Session session = sessionFactory.getCurrentSession()) {
             Transaction transaction = session.beginTransaction();
-
-//            testConnection(session);
 
             System.out.println("\nLoading all cities from DB...");
             List<City> cities = fetchCities();
@@ -193,22 +130,6 @@ public class App {
             Long count = getCountFromRedis();
             System.out.println("\nTotal keys in Redis: " + count);
 
-            // Явно закрываем сессию, чтобы очистить кэш перед тестами, вручную
-            session.close();
-
-            List<Integer> ids = List.of(3, 2545, 123, 4, 189, 89, 3458, 1189, 10, 102);
-
-            long startRedis = System.currentTimeMillis();
-            testRedisData(ids);
-            long stopRedis = System.currentTimeMillis();
-
-            long startMysql = System.currentTimeMillis();
-            testMysqlData(ids);
-            long stopMysql = System.currentTimeMillis();
-
-            System.out.printf("Redis: %d ms\n", (stopRedis - startRedis));
-            System.out.printf("MySQL: %d ms\n", (stopMysql - startMysql));
-
         } catch (Exception e) {
             System.err.println("Something wrong!!!");
             e.printStackTrace();
@@ -218,5 +139,18 @@ public class App {
             }
             MySessionFactory.shutdown();
         }
+    }
+
+    public App() {
+        this.sessionFactory = MySessionFactory.getSessionFactory();
+        this.countryDAO = new CountryDAO(sessionFactory);
+        this.cityDAO = new CityDAO(sessionFactory);
+        this.redisClient = prepareRedisClient();
+        this.mapper = new ObjectMapper();
+    }
+
+    public static void main(String[] args) {
+        App app = new App();
+        app.run();
     }
 }
